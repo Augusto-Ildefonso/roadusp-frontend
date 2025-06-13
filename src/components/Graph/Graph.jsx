@@ -96,6 +96,95 @@ const Graph = ({ data }) => {
     node.append("title")
       .text(d => `Código: ${d.id}\nNome: ${d.nome}\nCrédito Aula: ${d.credito_aula}\nCrédito Trabalho: ${d.credito_trabalho || "0"}\nCarga Horária: ${d.carga_horaria || "0"}\nCarga Horária de Estágio: ${d.carga_horaria_estagio || "0"}\nCarga horária de Práticas como Componentes Curriculares: ${d.carga_horaria_pratica || "0"}\nAtividades Teórico-Práticas de Aprofundamento: ${d.atividades_teoricos || "0"}`);
 
+    // Adicionar evento de clique aos nós
+    node.on("click", function(event, d) {
+      // Prevenir propagação do evento
+      event.stopPropagation();
+      
+      // Remover modal existente se houver
+      d3.select("#disciplina-modal").remove();
+      
+      // Criar modal
+      const modal = d3.select("body")
+        .append("div")
+        .attr("id", "disciplina-modal")
+        .style("position", "fixed")
+        .style("top", "0")
+        .style("left", "0")
+        .style("width", "100%")
+        .style("height", "100%")
+        .style("background-color", "rgba(0, 0, 0, 0.5)")
+        .style("display", "flex")
+        .style("justify-content", "center")
+        .style("align-items", "center")
+        .style("z-index", "1000");
+      
+      // Conteúdo da modal
+      const modalContent = modal.append("div")
+        .style("background", "white")
+        .style("padding", "20px")
+        .style("border-radius", "8px")
+        .style("max-width", "90%")
+        .style("max-height", "80%")
+        .style("overflow-y", "auto")
+        .style("box-shadow", "0 4px 6px rgba(0, 0, 0, 0.1)");
+      
+      // Título
+      modalContent.append("h3")
+        .style("margin-top", "0")
+        .style("color", "#333")
+        .text(d.nome);
+      
+      // Informações
+      const info = [
+        { label: "Código", value: d.id },
+        { label: "Nome", value: d.nome },
+        { label: "Crédito Aula", value: d.credito_aula },
+        { label: "Crédito Trabalho", value: d.credito_trabalho || "0" },
+        { label: "Carga Horária", value: d.carga_horaria || "0" },
+        { label: "Carga Horária de Estágio", value: d.carga_horaria_estagio || "0" },
+        { label: "Carga Horária de Práticas", value: d.carga_horaria_pratica || "0" },
+        { label: "Atividades Teórico-Práticas", value: d.atividades_teoricos || "0" }
+      ];
+      
+      info.forEach(item => {
+        const row = modalContent.append("div")
+          .style("margin-bottom", "8px");
+        
+        row.append("strong")
+          .text(item.label + ": ");
+        
+        row.append("span")
+          .text(item.value);
+      });
+      
+      // Botão fechar
+      modalContent.append("button")
+        .style("margin-top", "15px")
+        .style("padding", "8px 16px")
+        .style("background", "#007bff")
+        .style("color", "white")
+        .style("border", "none")
+        .style("border-radius", "4px")
+        .style("cursor", "pointer")
+        .text("Fechar")
+        .on("click", () => modal.remove());
+      
+      // Fechar ao clicar fora
+      modal.on("click", function(event) {
+        if (event.target === this) {
+          modal.remove();
+        }
+      });
+    });
+
+  // Fechar modal com ESC
+  d3.select("body").on("keydown", function(event) {
+    if (event.key === "Escape") {
+      d3.select("#disciplina-modal").remove();
+    }
+  });
+
     // Adicionar texto com o código da disciplina embaixo do nó - agora dentro do container
     const text = container.append("g")
       .selectAll("text")
