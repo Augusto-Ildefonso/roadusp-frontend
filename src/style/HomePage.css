@@ -1,22 +1,21 @@
-.HomePage{
-    margin: 0px;
-    padding: 0px;
-    width: 100%;
-    height: 100vh;
-    
-    background-image: url('../../public/images/background.png');
-    background-position: center;
-    background-repeat: repeat; 
-    
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-
-    color: white;
-}
-
 @media (min-width: 768px){
+    .HomePage{
+        margin: 0px;
+        padding: 0px;
+        width: 100%;
+        height: 100vh;
+        
+        background-image: url('../../public/images/background.png');
+        background-position: center;
+        background-repeat: repeat; 
+        
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        color: white;
+    }
     .Title{
         margin: 0px;
         font-size: 50px;
@@ -97,6 +96,23 @@
 }
 
 @media (max-width: 767px){
+    .HomePage{
+        margin: 0px;
+        padding: 0px;
+        width: 100%;
+        height: 90vh;
+        
+        background-image: url('../../public/images/background.png');
+        background-position: center;
+        background-repeat: repeat; 
+        
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        color: white;
+    }
     .Title{
         margin-top: 8vh;
         margin-bottom: 0px;
@@ -135,7 +151,7 @@
 
     .dropdownSelect{
         width: 50vw;
-        height: 5vh;
+        height: 7vh;
 
         border: 2px solid black;
         border-radius: 10px;
