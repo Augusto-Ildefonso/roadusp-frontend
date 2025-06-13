@@ -14,7 +14,7 @@
         useEffect(() => {
             const fetchData = async () => {
                 try {
-                    const response = await axios.get(`http://localhost:5000/disciplinas?unidade=${unidade}&curso=${curso}`);
+                    const response = await axios.get(`https://roadusp-backend.onrender.com/disciplinas?unidade=${unidade}&curso=${curso}`);
                     setData(response.data);
                 } catch (error) {
                     console.error("Erro ao buscar dados do gráfico:", error);

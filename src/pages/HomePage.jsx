@@ -11,7 +11,7 @@ const HomePage = () => {
 
     const handleSelectUnidade = async (unidade) => {
         setUnidade(unidade);
-        const response = await axios.get(`http://localhost:5000/listacursos?unidade=${unidade}`)
+        const response = await axios.get(`https://roadusp-backend.onrender.com/listacursos?unidade=${unidade}`)
         setListaCursos(response.data.cursos)
     }
 
