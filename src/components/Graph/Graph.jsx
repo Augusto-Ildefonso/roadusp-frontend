@@ -113,7 +113,8 @@ const Graph = ({ data }) => {
         .style("left", "0")
         .style("width", "100%")
         .style("height", "100%")
-        .style("background-color", "rgba(0, 0, 0, 0.5)")
+        .style("background", "rgba(0, 0, 0, 0.5)")
+        .style("color", "white")
         .style("display", "flex")
         .style("justify-content", "center")
         .style("align-items", "center")
@@ -121,7 +122,7 @@ const Graph = ({ data }) => {
       
       // Conteúdo da modal
       const modalContent = modal.append("div")
-        .style("background", "white")
+        .style("background", "#2d2d2d")
         .style("padding", "20px")
         .style("border-radius", "8px")
         .style("max-width", "90%")
@@ -132,7 +133,7 @@ const Graph = ({ data }) => {
       // Título
       modalContent.append("h3")
         .style("margin-top", "0")
-        .style("color", "#333")
+        .style("color", "#white")
         .text(d.nome);
       
       // Informações
@@ -162,7 +163,7 @@ const Graph = ({ data }) => {
       modalContent.append("button")
         .style("margin-top", "15px")
         .style("padding", "8px 16px")
-        .style("background", "#007bff")
+        .style("background", "#1094ab")
         .style("color", "white")
         .style("border", "none")
         .style("border-radius", "4px")
