@@ -13,7 +13,7 @@ const Graph = ({ data }) => {
 
     const width = window.innerWidth;
     const height = window.innerHeight;
-    const colorScheme = ["#fcb421", "#1094ab"];
+    const colorScheme = ["#fcb421", "#1094ab", "#64c4d1"];
     const color = d3.scaleOrdinal(colorScheme);
    
     // Garantir que links existe, mesmo que vazio
