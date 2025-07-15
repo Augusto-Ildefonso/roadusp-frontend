@@ -3,16 +3,40 @@ import { useNavigate } from "react-router-dom";
 import "../style/HomePage.css";
 import axios from "axios";
 
+const LoadingSpinner = () => {
+    return (
+        <div className="loading-spinner">
+            <div className="spinner-bar bar1"></div>
+            <div className="spinner-bar bar2"></div>
+            <div className="spinner-bar bar3"></div>
+            <div className="spinner-bar bar4"></div>
+            <div className="spinner-bar bar5"></div>
+        </div>
+    );
+};
+
 const HomePage = () => {
     const navigate = useNavigate();
     const [unidade, setUnidade] = useState('');
     const [curso, setCurso] = useState('');
     const [listaCursos, setListaCursos] = useState([]); 
+    const [isLoadingCursos, setIsLoadingCursos] = useState(false);
 
     const handleSelectUnidade = async (unidade) => {
         setUnidade(unidade);
-        const response = await axios.get(`https://roadusp-backend.onrender.com/listacursos?unidade=${unidade}`)
-        setListaCursos(response.data.cursos)
+        setCurso(''); // Limpa o curso selecionado
+        setListaCursos([]); // Limpa a lista de cursos
+        setIsLoadingCursos(true); // Inicia o loading
+        
+        try {
+            const response = await axios.get(`https://roadusp-backend.onrender.com/listacursos?unidade=${unidade}`);
+            setListaCursos(response.data.cursos);
+        } catch (error) {
+            console.error('Erro ao carregar cursos:', error);
+            alert('Erro ao carregar cursos. Tente novamente.');
+        } finally {
+            setIsLoadingCursos(false); // Para o loading
+        }
     }
 
     const handleSelectCurso = (curso) => {
@@ -31,6 +55,14 @@ const HomePage = () => {
     
     return(
         <div className="HomePage">
+            {isLoadingCursos && (
+                <div className="loading-overlay">
+                    <div className="loading-spinner-center">
+                        <LoadingSpinner />
+                    </div>
+                </div>
+            )}
+            
             <h1 className="Title"><span style={{"color": "#1094ab"}}>Road</span><span style={{"color": "#fcb421"}}>USP</span></h1>
             <h2 className="text">Visualize facilmente as relações entre disciplinas do seu curso.</h2>
             <div className="selectMenu">
@@ -91,8 +123,10 @@ const HomePage = () => {
                 <h1>Selecione o curso:</h1>
                 <select 
                 className="dropdownSelect"
-                onChange={e => handleSelectCurso(e.target.value)}>
-                    <option value="" disabled selected>Cursos</option>
+                onChange={e => handleSelectCurso(e.target.value)}
+                disabled={unidade === ''}
+                value={curso}>
+                    <option value="" disabled>Cursos</option>
                     {listaCursos.map((cursoItem, index) => (
                         <option key={index} value={cursoItem}>
                             {cursoItem}
