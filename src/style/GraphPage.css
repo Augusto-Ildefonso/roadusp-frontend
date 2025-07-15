@@ -4,3 +4,46 @@
     justify-content: center;
     align-items: center;
 }
+
+/* Legenda fixa no canto superior direito */
+.legend {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  z-index: 50;
+}
+
+/* Container dos itens da legenda */
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Item individual da legenda */
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Quadrado colorido */
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* Texto da legenda */
+.legend-text {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+  line-height: 1.4;
+}
