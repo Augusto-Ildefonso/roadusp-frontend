@@ -22,12 +22,6 @@ const HomePage = () => {
     const [listaCursos, setListaCursos] = useState([]); 
     const [isLoadingCursos, setIsLoadingCursos] = useState(false);
 
-    // Acorda o backend ao carregar a página
-    React.useEffect(() => {
-        axios.get('https://roadusp-backend.onrender.com/ping')
-            .catch(() => {});
-    }, []);
-
     const handleSelectUnidade = async (unidade) => {
         setUnidade(unidade);
         setCurso(''); // Limpa o curso selecionado
