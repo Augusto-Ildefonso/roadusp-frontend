@@ -145,6 +145,12 @@ const HomePage = () => {
                 Buscar
             </button>
 
+            <div className="aviso-container">
+                <div className="aviso">
+                    ⚠️ (Arrumando...) Alguns requisitos que começam com número não estão aparencendo
+                </div>
+            </div>
+
             <div className="footer">
                 <a href="https://github.com/Augusto-Ildefonso" target="_blank" rel="noopener noreferrer" className="footer-link">
                     Made by Augusto Ildefonso
