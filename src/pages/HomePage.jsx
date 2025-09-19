@@ -145,6 +145,12 @@ const HomePage = () => {
                 Buscar
             </button>
 
+            <div className="footer">
+                <a href="https://github.com/Augusto-Ildefonso" target="_blank" rel="noopener noreferrer" className="footer-link">
+                    Made by Augusto Ildefonso
+                </a>
+            </div>
+
         </div>
     );
 }
