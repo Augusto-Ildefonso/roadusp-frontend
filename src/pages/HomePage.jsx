@@ -147,7 +147,13 @@ const HomePage = () => {
 
             <div className="aviso-container">
                 <div className="aviso">
-                    ⚠️ (Arrumando...) Alguns requisitos que começam com número não estão aparencendo
+                    ✅ Última atualização: Disciplinas com códigos totalmente numéricas aparecem como requisito.
+                </div>
+            </div>
+
+            <div className="aviso-container">
+                <div className="aviso">
+                    <span>Caso deseje contribuir com o projeto, acesse o&nbsp;<a href="https://github.com/Augusto-Ildefonso/roadusp">repositório</a>.</span>
                 </div>
             </div>
 
