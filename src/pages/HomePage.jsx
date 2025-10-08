@@ -147,7 +147,7 @@ const HomePage = () => {
 
             <div className="aviso-container">
                 <div className="aviso">
-                    ✅ Última atualização: Disciplinas com códigos totalmente numéricas aparecem como requisito.
+                    ⚠️ Estamos atualizando o banco de dados, então alguns cursos podem estar faltando ou com grade errada.<br/>Pedimos desculpas pela inconveniência.
                 </div>
             </div>
 
