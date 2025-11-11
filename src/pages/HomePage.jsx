@@ -147,7 +147,7 @@ const HomePage = () => {
 
             <div className="aviso-container">
                 <div className="aviso">
-                    ⚠️ Estamos atualizando o banco de dados, então alguns cursos podem estar faltando ou com grade errada.<br/>Pedimos desculpas pela inconveniência.
+                    ✅ Banco de dados atualizado!<br/>Caso encontre alguma divergência por favor entrar em contato pelo email: afildefonso16@gmail.com.
                 </div>
             </div>
 
