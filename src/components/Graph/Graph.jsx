@@ -13,8 +13,7 @@ const Graph = ({ data, highlightId }) => {
 
     const width = window.innerWidth;
     const height = window.innerHeight;
-    const colorScheme = ["#fcb421", "#1094ab", "#64c4d1"];
-    const color = d3.scaleOrdinal(colorScheme);
+    // Criar escala de cores baseada no semestre das disciplinas
    
     // Garantir que links existe, mesmo que vazio
     const links = (data.links || []).map(d => ({ ...d }));
@@ -80,12 +79,17 @@ const Graph = ({ data, highlightId }) => {
       .attr("marker-end", "url(#arrowhead)"); // Adicionar seta no final da linha
 
     // Criar nós - agora dentro do container
+    // Escala de cores por semestre (domain criado a partir dos nós)
+    const semesters = Array.from(new Set(nodes.map(n => n.semestre))).sort((a, b) => (a || '').toString().localeCompare((b || '').toString(), undefined, { numeric: true }));
+    const palette = d3.schemeTableau10;
+    const color = d3.scaleOrdinal().domain(semesters).range(palette);
+
     const node = container.append("g")
       .selectAll("circle")
       .data(nodes)
       .join("circle")
       .attr("r", d => (highlightId && d.id === highlightId) ? 14 : 10)
-      .attr("fill", d => (highlightId && d.id === highlightId) ? "#ff3b3b" : color(d.group))
+      .attr("fill", d => (highlightId && d.id === highlightId) ? "#ff3b3b" : color(d.semestre))
       .attr("stroke", d => (highlightId && d.id === highlightId) ? "#ff8a8a" : "none")
       .attr("stroke-width", d => (highlightId && d.id === highlightId) ? 3 : 0)
       .call(d3.drag()

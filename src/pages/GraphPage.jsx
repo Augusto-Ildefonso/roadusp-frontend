@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
+import * as d3 from 'd3';
 import { useSearchParams } from "react-router-dom";
 import Graph from "../components/Graph/Graph";
 import "../style/GraphPage.css";
@@ -35,12 +36,13 @@ const GraphPage = () => {
   const unidade = searchParams.get("unidade");
   const curso = searchParams.get("curso");
 
-  // Configure suas cores e legendas aqui
-  const legendItems = [
-    { color: "#fcb421", label: "Disciplinas Obrigatórias" },
-    { color: "#1094ab", label: "Disciplinas Eletivas" },
-    { color: "#64c4d1", label: "Disciplinas Optativas" }
-  ];
+  // Gerar legenda baseada nos semestres presentes nos dados
+  const legendItems = useMemo(() => {
+    if (!data || !data.nodes) return [];
+    const semesters = Array.from(new Set(data.nodes.map(n => n.semestre))).sort((a, b) => (a || '').toString().localeCompare((b || '').toString(), undefined, { numeric: true }));
+    const palette = d3.schemeTableau10;
+    return semesters.map((s, i) => ({ color: palette[i % palette.length], label: `${s}` }));
+  }, [data]);
   const [searchCode, setSearchCode] = useState("");
   const [message, setMessage] = useState("");
   const [suggestions, setSuggestions] = useState([]);
