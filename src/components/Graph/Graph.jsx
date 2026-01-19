@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import "./Graph.css"
 
-const Graph = ({ data }) => {
+const Graph = ({ data, highlightId }) => {
   const svgRef = useRef();
 
   useEffect(() => {
@@ -84,8 +84,10 @@ const Graph = ({ data }) => {
       .selectAll("circle")
       .data(nodes)
       .join("circle")
-      .attr("r", 10)
-      .attr("fill", d => color(d.group))
+      .attr("r", d => (highlightId && d.id === highlightId) ? 14 : 10)
+      .attr("fill", d => (highlightId && d.id === highlightId) ? "#ff3b3b" : color(d.group))
+      .attr("stroke", d => (highlightId && d.id === highlightId) ? "#ff8a8a" : "none")
+      .attr("stroke-width", d => (highlightId && d.id === highlightId) ? 3 : 0)
       .call(d3.drag()
         .on("start", dragstarted)
         .on("drag", dragged)
@@ -262,7 +264,7 @@ const Graph = ({ data }) => {
     return () => {
       simulation.stop(); // Cleanup on unmount
     };
-  }, [data]);
+  }, [data, highlightId]);
 
   return <svg ref={svgRef}></svg>;
 };
