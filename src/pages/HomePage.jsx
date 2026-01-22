@@ -163,18 +163,21 @@ const HomePage = () => {
             <button onClick={() => handleClick()} className="buttonSearch">
                 Buscar
             </button>
-
+            
+            {/*
             <div className="aviso-container">
                 <div className="aviso">
                     ✅ Banco de dados atualizado!<br/>Caso encontre alguma divergência por favor entrar em contato pelo email: afildefonso16@gmail.com.
                 </div>
-            </div>
-
+            </div>  
+            */}
+            
             <div className="aviso-container">
                 <div className="aviso">
                     <span>Caso deseje contribuir com o projeto, acesse o&nbsp;<a href="https://github.com/Augusto-Ildefonso/roadusp">repositório</a>.</span>
                 </div>
             </div>
+            
 
             <div className="footer">
                 <a href="https://github.com/Augusto-Ildefonso" target="_blank" rel="noopener noreferrer" className="footer-link">
