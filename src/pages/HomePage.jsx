@@ -30,6 +30,8 @@ const HomePage = () => {
 
     const handleSelectUnidade = async (unidade) => {
         setUnidade(unidade);
+        // salvar unidade selecionada
+        try { localStorage.setItem('roadusp_unidade', unidade); } catch (e) {}
         setCurso(''); // Limpa o curso selecionado
         setListaCursos([]); // Limpa a lista de cursos
         setIsLoadingCursos(true); // Inicia o loading
@@ -37,6 +39,13 @@ const HomePage = () => {
         try {
             const response = await axios.get(`https://roadusp-backend.onrender.com/listacursos?unidade=${unidade}`);
             setListaCursos(response.data.cursos);
+            // Restaurar curso salvo se existir na lista
+            try {
+                const savedCurso = localStorage.getItem('roadusp_curso');
+                if (savedCurso && response.data.cursos.includes(savedCurso)) {
+                    setCurso(savedCurso);
+                }
+            } catch (e) {}
         } catch (error) {
             console.error('Erro ao carregar cursos:', error);
             alert('Erro ao carregar cursos. Tente novamente.');
@@ -47,6 +56,7 @@ const HomePage = () => {
 
     const handleSelectCurso = (curso) => {
         setCurso(curso)
+        try { localStorage.setItem('roadusp_curso', curso); } catch (e) {}
     }
 
     const handleClick = () => {
@@ -58,6 +68,14 @@ const HomePage = () => {
             navigate(`/graph?unidade=${unidade}&curso=${curso}`)
         }
     }    
+
+    // Restaurar seleção salva ao montar (chama o fluxo que carrega cursos)
+    React.useEffect(() => {
+        try {
+            const savedUnidade = localStorage.getItem('roadusp_unidade');
+            if (savedUnidade) handleSelectUnidade(savedUnidade);
+        } catch (e) {}
+    }, []);
     
     return(
         <div className="HomePage">
@@ -75,8 +93,9 @@ const HomePage = () => {
                 <h1>Selecione a unidade:</h1>
                 <select 
                 className="dropdownSelect"
+                value={unidade}
                 onChange={e => handleSelectUnidade(e.target.value)}>
-                    <option value="" disabled selected>Unidades</option>
+                    <option value="" disabled>Unidades</option>
                     <option value="Escola de Artes, Ciências e Humanidades - ( EACH )">Escola de Artes, Ciências e Humanidades - (EACH)</option>
                     <option value="Escola de Comunicações e Artes - ( ECA )">Escola de Comunicações e Artes - (ECA)</option>
                     <option value="Escola de Educação Física e Esporte - ( EEFE )">Escola de Educação Física e Esporte - (EEFE)</option>
