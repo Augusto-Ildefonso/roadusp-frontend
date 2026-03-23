@@ -1,7 +1,7 @@
+import axios from "axios";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../style/HomePage.css";
-import axios from "axios";
 
 const LoadingSpinner = () => {
     return (
@@ -21,6 +21,7 @@ const HomePage = () => {
     const [curso, setCurso] = useState('');
     const [listaCursos, setListaCursos] = useState([]); 
     const [isLoadingCursos, setIsLoadingCursos] = useState(false);
+    const [isLoadingGraph, setIsLoadingGraph] = useState(false);
 
     // Acorda o backend ao carregar a página
     React.useEffect(() => {
@@ -37,7 +38,7 @@ const HomePage = () => {
         setIsLoadingCursos(true); // Inicia o loading
         
         try {
-            const response = await axios.get(`https://roadusp-backend.onrender.com/listacursos?unidade=${unidade}`);
+            const response = await axios.get(`https://roadusp-backend.onrender.com/api/v1/cursos/lista?unidade=${unidade}`);
             setListaCursos(response.data.cursos);
             // Restaurar curso salvo se existir na lista
             try {
@@ -59,13 +60,24 @@ const HomePage = () => {
         try { localStorage.setItem('roadusp_curso', curso); } catch (e) {}
     }
 
-    const handleClick = () => {
+    const handleClick = async () => {
         if (unidade === ''){
             alert("Selecione uma unidade!")
         } else if (curso === ''){
             alert("Selecione um curso")
         } else{
-            navigate(`/graph?unidade=${unidade}&curso=${curso}`)
+            setIsLoadingGraph(true);
+            try {
+                const response = await axios.get(`https://roadusp-backend.onrender.com/api/v1/cursos/disciplinas?unidade=${unidade}&curso=${curso}`);
+                navigate(`/graph?unidade=${encodeURIComponent(unidade)}&curso=${encodeURIComponent(curso)}`, {
+                    state: { graphData: response.data }
+                });
+            } catch (error) {
+                console.error('Erro ao carregar disciplinas:', error);
+                alert('Erro ao carregar dados do curso. Tente novamente.');
+            } finally {
+                setIsLoadingGraph(false);
+            }
         }
     }    
 
@@ -79,7 +91,7 @@ const HomePage = () => {
     
     return(
         <div className="HomePage">
-            {isLoadingCursos && (
+            {(isLoadingCursos || isLoadingGraph) && (
                 <div className="loading-overlay">
                     <div className="loading-spinner-center">
                         <LoadingSpinner />

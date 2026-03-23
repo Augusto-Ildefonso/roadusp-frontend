@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useMemo } from "react";
+import axios from "axios";
 import * as d3 from 'd3';
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 import Graph from "../components/Graph/Graph";
 import "../style/GraphPage.css";
-import axios from "axios";
 
 // Componente de Legenda com CSS nativo
 const Legend = ({ items = [
@@ -31,8 +31,9 @@ const Legend = ({ items = [
 };
 
 const GraphPage = () => {
+  const location = useLocation();
   const [searchParams] = useSearchParams();
-  const [data, setData] = useState(null);
+  const [data, setData] = useState(location.state?.graphData || null);
   const unidade = searchParams.get("unidade");
   const curso = searchParams.get("curso");
 
@@ -49,9 +50,14 @@ const GraphPage = () => {
   const [highlightedCode, setHighlightedCode] = useState(null);
 
   useEffect(() => {
+    if (location.state?.graphData) {
+      setData(location.state.graphData);
+      return;
+    }
+
     const fetchData = async () => {
       try {
-        const response = await axios.get(`https://roadusp-backend.onrender.com/disciplinas?unidade=${unidade}&curso=${curso}`);
+        const response = await axios.get(`https://roadusp-backend.onrender.com/api/v1/cursos/disciplina/?unidade=${encodeURIComponent(unidade)}&curso=${encodeURIComponent(curso)}`);
         setData(response.data);
       } catch (error) {
         console.error("Erro ao buscar dados do gráfico:", error);
@@ -61,7 +67,7 @@ const GraphPage = () => {
     if (unidade && curso) {
       fetchData();
     }
-  }, [unidade, curso]);
+  }, [unidade, curso, location.state]);
 
   return (
     <div className="GraphPage">
