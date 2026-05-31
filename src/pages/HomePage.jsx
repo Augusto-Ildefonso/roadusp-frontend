@@ -1,114 +1,299 @@
-import axios from "axios";
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "../style/HomePage.css";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import api from "../services/api";
+import NodeBackground from "../components/NodeBackground/NodeBackground";
+import { useAuth } from "../contexts/AuthContext";
+import AuthModal from "../components/Auth/AuthModal";
+import ChangePasswordModal from "../components/Auth/ChangePasswordModal";
+import ProfileMenu from "../components/Profile/ProfileMenu";
+import UploadToast from "../components/Upload/UploadToast";
 
-const LoadingSpinner = () => {
-    return (
-        <div className="loading-spinner">
-            <div className="spinner-bar bar1"></div>
-            <div className="spinner-bar bar2"></div>
-            <div className="spinner-bar bar3"></div>
-            <div className="spinner-bar bar4"></div>
-            <div className="spinner-bar bar5"></div>
-        </div>
-    );
-};
+const UNIDADE_VALUES = [
+  "Escola de Artes, Ciências e Humanidades - ( EACH )",
+  "Escola de Comunicações e Artes - ( ECA )",
+  "Escola de Educação Física e Esporte - ( EEFE )",
+  "Escola de Educação Física e Esporte de Ribeirão Preto - ( EEFERP )",
+  "Escola de Enfermagem - ( EE )",
+  "Escola de Enfermagem de Ribeirão Preto - ( EERP )",
+  "Escola de Engenharia de Lorena - ( EEL )",
+  "Escola de Engenharia de São Carlos - ( EESC )",
+  "Escola de Engenharia de São Carlos e Instituto de Ciências Matemáticas e de Computação - ( EESC e ICMC )",
+  "Escola Politécnica - ( EP )",
+  'Escola Superior de Agricultura "Luiz de Queiroz" - ( ESALQ )',
+  "Faculdade de Arquitetura e Urbanismo e de Design - ( FAU )",
+  "Faculdade de Ciências Farmacêuticas - ( FCF )",
+  "Faculdade de Ciências Farmacêuticas de Ribeirão Preto - ( FCFRP )",
+  "Faculdade de Direito - ( FD )",
+  "Faculdade de Direito de Ribeirão Preto - ( FDRP )",
+  "Faculdade de Economia, Administração e Contabilidade de Ribeirão Preto - ( FEARP )",
+  "Faculdade de Economia, Administração, Contabilidade e Atuária - ( FEA )",
+  "Faculdade de Educação - ( FE )",
+  "Faculdade de Filosofia, Ciências e Letras de Ribeirão Preto - ( FFCLRP )",
+  "Faculdade de Filosofia, Letras e Ciências Humanas - ( FFLCH )",
+  "Faculdade de Medicina - ( FM )",
+  "Faculdade de Medicina de Bauru - ( FMBRU )",
+  "Faculdade de Medicina de Ribeirão Preto - ( FMRP )",
+  "Faculdade de Medicina Veterinária e Zootecnia - ( FMVZ )",
+  "Faculdade de Odontologia - ( FO )",
+  "Faculdade de Odontologia de Bauru - ( FOB )",
+  "Faculdade de Odontologia de Ribeirão Preto - ( FORP )",
+  "Faculdade de Saúde Pública - ( FSP )",
+  "Faculdade de Zootecnia e Engenharia de Alimentos - ( FZEA )",
+  "Física Médica - Instituto de Física e Faculdade de Medicina - ( Física Méd - IF e FM )",
+  "Instituto de Arquitetura e Urbanismo de São Carlos - ( IAU )",
+  "Instituto de Astronomia, Geofísica e Ciências Atmosféricas - ( IAG )",
+  "Instituto de Biociências - ( IB )",
+  "Instituto de Ciências Biomédicas - ( ICB )",
+  "Instituto de Ciências Matemáticas e de Computação - ( ICMC )",
+  "Instituto de Física - ( IF )",
+  "Instituto de Física de São Carlos - ( IFSC )",
+  "Instituto de Geociências - ( IGc )",
+  "Instituto de Matemática e Estatística - ( IME )",
+  "Instituto de Psicologia - ( IP )",
+  "Instituto de Química - ( IQ )",
+  "Instituto de Química de São Carlos - ( IQSC )",
+  "Instituto de Relações Internacionais - ( IRI )",
+  "Instituto Oceanográfico - ( IO )",
+  "Interunidades de Licenciatura IFSC/IQSC/ICMC - ( Inter IFSC/IQSC/ICMC )",
+  "Pró-Reitoria de Graduação - ( Pró-G )",
+];
+
+function matchUnidade(pdfUnidade) {
+  const normalized = pdfUnidade.trim().replace(/\s+/g, " ");
+  return UNIDADE_VALUES.find((opt) => {
+    const namePart = opt.replace(/\s*-\s*\(.*\)\s*$/, "").trim();
+    return namePart === normalized;
+  }) || null;
+}
+
+function normalize(str) {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function matchCurso(pdfCurso, listaCursos) {
+  const normalizedPdf = normalize(pdfCurso);
+  const exact = listaCursos.find((c) => normalize(c) === normalizedPdf);
+  if (exact) return exact;
+  return listaCursos.find(
+    (c) => normalize(c).includes(normalizedPdf) || normalizedPdf.includes(normalize(c))
+  ) || null;
+}
+
+const LoadingSpinner = () => (
+  <div className="flex items-center gap-1.5">
+    {[...Array(5)].map((_, i) => (
+      <div
+        key={i}
+        className={`w-1.5 h-10 rounded-full animate-bounce ${i % 2 === 0 ? "bg-primary-DEFAULT" : "bg-secondary-DEFAULT"}`}
+        style={{ animationDelay: `${i * 0.1}s` }}
+      />
+    ))}
+  </div>
+);
 
 const HomePage = () => {
     const navigate = useNavigate();
-    const [unidade, setUnidade] = useState('');
-    const [curso, setCurso] = useState('');
-    const [listaCursos, setListaCursos] = useState([]); 
+    const location = useLocation();
+    const [unidade, setUnidade] = useState("");
+    const [curso, setCurso] = useState("");
+    const [listaCursos, setListaCursos] = useState([]);
     const [isLoadingCursos, setIsLoadingCursos] = useState(false);
-    const [isLoadingGraph, setIsLoadingGraph] = useState(false);
 
-    // Acorda o backend ao carregar a página
-    React.useEffect(() => {
-        axios.get('https://roadusp-backend.onrender.com/ping')
-            .catch(() => {});
-    }, []);
+  const { isLoggedIn, uploadHistory, pollProcessing, setHistoricoStatus, fetchPreferences, savePreferences } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(() => {
+    if (isLoggedIn || location.state?.fromGraph) return false;
+    return true;
+  });
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("idle");
+  const [uploadError, setUploadError] = useState("");
 
-    const handleSelectUnidade = async (unidade) => {
-        setUnidade(unidade);
-        // salvar unidade selecionada
-        try { localStorage.setItem('roadusp_unidade', unidade); } catch (e) {}
-        setCurso(''); // Limpa o curso selecionado
-        setListaCursos([]); // Limpa a lista de cursos
-        setIsLoadingCursos(true); // Inicia o loading
-        
+  const handleCloseAuthModal = () => {
+    setShowAuthModal(false);
+  };
+
+  const handleUpload = async (file) => {
+    setUploadStatus("uploading");
+    setUploadError("");
+    try {
+      const processamentoId = await uploadHistory(file);
+      const poll = setInterval(async () => {
         try {
-            const response = await axios.get(`https://roadusp-backend.onrender.com/api/v1/cursos/lista?unidade=${unidade}`);
+          const result = await pollProcessing(processamentoId);
+          if (result.status === "concluido") {
+            clearInterval(poll);
+            setHistoricoStatus(result.resultado);
+            setUploadStatus("done");
+            const { unidade: pdfUnidade, curso: pdfCurso } = result.resultado || {};
+            if (pdfUnidade && pdfCurso) {
+              const matchedUnidade = matchUnidade(pdfUnidade) || pdfUnidade;
+              setUnidade(matchedUnidade);
+              try { localStorage.setItem("roadusp_unidade", matchedUnidade); } catch (e) {}
+              setIsLoadingCursos(true);
+              try {
+                const response = await api.get(`/api/v1/cursos/lista?unidade=${matchedUnidade}`);
+                setListaCursos(response.data.cursos);
+                const matchedCurso = matchCurso(pdfCurso, response.data.cursos);
+                if (matchedCurso) {
+                  setCurso(matchedCurso);
+                  try { localStorage.setItem("roadusp_curso", matchedCurso); } catch (e) {}
+                  if (isLoggedIn) savePreferences(matchedUnidade, matchedCurso).catch(() => {});
+                }
+              } catch (e) {}
+              setIsLoadingCursos(false);
+            }
+          } else if (result.status === "erro") {
+            clearInterval(poll);
+            setUploadStatus("error");
+            setUploadError(result.erro || "Erro ao processar o histórico.");
+          }
+        } catch {
+          clearInterval(poll);
+          setUploadStatus("error");
+          setUploadError("Erro de conexão ao verificar o processamento.");
+        }
+      }, 2000);
+    } catch (err) {
+      setUploadStatus("error");
+      const data = err.response?.data;
+      setUploadError(data?.error || "Erro ao enviar o arquivo.");
+    }
+  };
+
+  const handleUploadDismiss = () => {
+    setUploadStatus("idle");
+    setUploadError("");
+  };
+
+  useEffect(() => {
+    api.get("/ping").catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    fetchPreferences().then(async (prefs) => {
+      if (!prefs.unidade) return;
+      setUnidade(prefs.unidade);
+      try { localStorage.setItem("roadusp_unidade", prefs.unidade); } catch (e) {}
+      try {
+        const response = await api.get(`/api/v1/cursos/lista?unidade=${prefs.unidade}`);
+        setListaCursos(response.data.cursos);
+        if (prefs.curso && response.data.cursos.includes(prefs.curso)) {
+          setCurso(prefs.curso);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar cursos:", error);
+      }
+    }).catch(() => {});
+  }, [isLoggedIn, fetchPreferences]);
+
+  const handleSelectUnidade = async (unidade) => {
+        setUnidade(unidade);
+        try { localStorage.setItem("roadusp_unidade", unidade); } catch (e) {}
+        setCurso("");
+        setListaCursos([]);
+        setIsLoadingCursos(true);
+
+        try {
+            const response = await api.get(`/api/v1/cursos/lista?unidade=${unidade}`);
             setListaCursos(response.data.cursos);
-            // Restaurar curso salvo se existir na lista
             try {
-                const savedCurso = localStorage.getItem('roadusp_curso');
+                const savedCurso = localStorage.getItem("roadusp_curso");
                 if (savedCurso && response.data.cursos.includes(savedCurso)) {
                     setCurso(savedCurso);
+                    if (isLoggedIn) savePreferences(unidade, savedCurso).catch(() => {});
                 }
             } catch (e) {}
         } catch (error) {
-            console.error('Erro ao carregar cursos:', error);
-            alert('Erro ao carregar cursos. Tente novamente.');
+            console.error("Erro ao carregar cursos:", error);
+            alert("Erro ao carregar cursos. Tente novamente.");
         } finally {
-            setIsLoadingCursos(false); // Para o loading
+            setIsLoadingCursos(false);
         }
     }
 
-    const handleSelectCurso = (curso) => {
-        setCurso(curso)
-        try { localStorage.setItem('roadusp_curso', curso); } catch (e) {}
-    }
-
     const handleClick = async () => {
-        if (unidade === ''){
+        if (unidade === ""){
             alert("Selecione uma unidade!")
-        } else if (curso === ''){
+        } else if (curso === ""){
             alert("Selecione um curso")
         } else{
-            setIsLoadingGraph(true);
             try {
-                const response = await axios.get(`https://roadusp-backend.onrender.com/api/v1/cursos/disciplinas?unidade=${unidade}&curso=${curso}`);
+                const response = await api.get(`/api/v1/cursos/disciplinas?unidade=${unidade}&curso=${curso}`);
                 navigate(`/graph?unidade=${encodeURIComponent(unidade)}&curso=${encodeURIComponent(curso)}`, {
                     state: { graphData: response.data }
                 });
             } catch (error) {
-                console.error('Erro ao carregar disciplinas:', error);
-                alert('Erro ao carregar dados do curso. Tente novamente.');
-            } finally {
-                setIsLoadingGraph(false);
+                console.error("Erro ao carregar disciplinas:", error);
+                alert("Erro ao carregar dados do curso. Tente novamente.");
             }
         }
-    }    
+    }
 
-    // Restaurar seleção salva ao montar (chama o fluxo que carrega cursos)
-    React.useEffect(() => {
-        try {
-            const savedUnidade = localStorage.getItem('roadusp_unidade');
-            if (savedUnidade) handleSelectUnidade(savedUnidade);
-        } catch (e) {}
-    }, []);
-    
-    return(
-        <div className="HomePage">
-            {(isLoadingCursos || isLoadingGraph) && (
-                <div className="loading-overlay">
-                    <div className="loading-spinner-center">
-                        <LoadingSpinner />
-                    </div>
-                </div>
-            )}
-            
-            <h1 className="Title"><span style={{"color": "#1094ab"}}>Road</span><span style={{"color": "#fcb421"}}>USP</span></h1>
-            <h2 className="text">Visualize facilmente as relações entre disciplinas do seu curso.</h2>
-            <div className="selectMenu">
-                <h1>Selecione a unidade:</h1>
-                <select 
-                className="dropdownSelect"
-                value={unidade}
-                onChange={e => handleSelectUnidade(e.target.value)}>
-                    <option value="" disabled>Unidades</option>
-                    <option value="Escola de Artes, Ciências e Humanidades - ( EACH )">Escola de Artes, Ciências e Humanidades - (EACH)</option>
+  return (
+    <div className="relative min-h-screen w-full bg-surface-base flex flex-col items-center justify-center p-4 overflow-hidden">
+      <NodeBackground />
+
+      <div className="fixed top-4 right-4 z-50">
+        <ProfileMenu
+          onChangePasswordClick={() => setShowChangePassword(true)}
+          onUpload={handleUpload}
+          onLoginClick={() => setShowAuthModal(true)}
+        />
+      </div>
+
+      {showAuthModal && <AuthModal onClose={handleCloseAuthModal} />}
+
+      {showChangePassword && (
+        <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
+      )}
+
+      <UploadToast
+        status={uploadStatus}
+        message={uploadError}
+        onDismiss={handleUploadDismiss}
+      />
+
+      <div className="relative z-10 flex flex-col items-center w-full">
+        {/* Loading Overlay */}
+        {isLoadingCursos && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-surface-base/60 backdrop-blur-sm">
+            <div className="bg-surface-card p-8 rounded-3xl shadow-2xl border border-border-subtle">
+              <LoadingSpinner />
+            </div>
+          </div>
+        )}
+
+        {/* Hero Section */}
+        <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-4">
+            <span className="text-primary-DEFAULT">Road</span>
+            <span className="text-secondary-DEFAULT">USP</span>
+          </h1>
+          <p className="text-text-secondary text-lg md:text-xl max-w-md mx-auto leading-relaxed">
+            Visualize as relações entre as disciplinas do seu curso de forma interativa.
+          </p>
+        </div>
+
+        {/* Search Card */}
+        <div className="relative w-full max-w-xl">
+          <div className="absolute -inset-[1px] rounded-[2rem] bg-gradient-to-r from-primary-400 via-primary-DEFAULT to-secondary-DEFAULT opacity-50 blur-sm" />
+          <div className="relative w-full bg-surface-card backdrop-blur-xl border border-border-subtle p-8 rounded-[2rem] shadow-2xl space-y-6">
+            <div className="space-y-4">
+              <div className="group">
+                <label className="text-xs font-bold uppercase tracking-widest text-primary-DEFAULT ml-1 mb-2 block">Unidade</label>
+                <select
+                  className="w-full bg-surface-elevated/50 border border-border-default text-text-primary rounded-xl p-4 outline-none focus:ring-2 focus:ring-primary-DEFAULT transition-all appearance-none cursor-pointer"
+                  onChange={e => handleSelectUnidade(e.target.value)}
+                  value={unidade}
+                >
+                  <option value="" disabled>Selecione a unidade...</option>
+                  <option value="Escola de Artes, Ciências e Humanidades - ( EACH )">Escola de Artes, Ciências e Humanidades - (EACH)</option>
                     <option value="Escola de Comunicações e Artes - ( ECA )">Escola de Comunicações e Artes - (ECA)</option>
                     <option value="Escola de Educação Física e Esporte - ( EEFE )">Escola de Educação Física e Esporte - (EEFE)</option>
                     <option value="Escola de Educação Física e Esporte de Ribeirão Preto - ( EEFERP )">Escola de Educação Física e Esporte de Ribeirão Preto - (EEFERP)</option>
@@ -156,49 +341,62 @@ const HomePage = () => {
                     <option value="Interunidades de Licenciatura IFSC/IQSC/ICMC - ( Inter IFSC/IQSC/ICMC )">Interunidades de Licenciatura IFSC/IQSC/ICMC - (Inter IFSC/IQSC/ICMC)</option>
                     <option value="Pró-Reitoria de Graduação - ( Pró-G )">Pró-Reitoria de Graduação - (Pró-G)</option>
                 </select>
+              </div>
 
-                <h1>Selecione o curso:</h1>
-                <select 
-                className="dropdownSelect"
-                onChange={e => handleSelectCurso(e.target.value)}
-                disabled={unidade === ''}
-                value={curso}>
-                    <option value="" disabled>Cursos</option>
-                    {listaCursos.map((cursoItem, index) => (
-                        <option key={index} value={cursoItem}>
-                            {cursoItem}
-                        </option>
-                    ))}
+              <div className="group">
+                <label className="text-xs font-bold uppercase tracking-widest text-secondary-DEFAULT ml-1 mb-2 block">Curso</label>
+                <select
+                  className="w-full bg-surface-elevated/50 border border-border-default text-text-primary rounded-xl p-4 outline-none focus:ring-2 focus:ring-secondary-DEFAULT transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  onChange={e => {
+                    const v = e.target.value;
+                    setCurso(v);
+                    try { localStorage.setItem("roadusp_curso", v); } catch (e) {}
+                    if (isLoggedIn && unidade) savePreferences(unidade, v).catch(() => {});
+                  }}
+                  disabled={!unidade}
+                  value={curso}
+                >
+                  <option value="" disabled>Selecione o curso...</option>
+                  {listaCursos.map((c, i) => (
+                    <option key={i} value={c}>{c}</option>
+                  ))}
                 </select>
+              </div>
             </div>
 
-            <button onClick={() => handleClick()} className="buttonSearch">
-                Buscar
+            <button
+              onClick={handleClick}
+              className="group relative w-full overflow-hidden bg-gradient-to-r from-primary-DEFAULT to-primary-700 hover:from-accent-teal hover:to-primary-DEFAULT text-white font-bold py-4 rounded-xl shadow-lg shadow-primary-DEFAULT/20 transform transition hover:scale-[1.02] active:scale-95 text-lg"
+            >
+              <span className="relative z-10">Explorar Grade Curricular</span>
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-0 transition-transform duration-500 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12" />
             </button>
-            
-            {/*
-            <div className="aviso-container">
-                <div className="aviso">
-                    ✅ Banco de dados atualizado!<br/>Caso encontre alguma divergência por favor entrar em contato pelo email: afildefonso16@gmail.com.
-                </div>
-            </div>  
-            */}
-            
-            <div className="aviso-container">
-                <div className="aviso">
-                    <span>Caso deseje contribuir com o projeto, acesse o&nbsp;<a href="https://github.com/Augusto-Ildefonso/roadusp">repositório</a>.</span>
-                </div>
-            </div>
-            
-
-            <div className="footer">
-                <a href="https://github.com/Augusto-Ildefonso" target="_blank" rel="noopener noreferrer" className="footer-link">
-                    Made by Augusto Ildefonso
-                </a>
-            </div>
-
+          </div>
         </div>
-    );
-}
+
+        {/* Info Badges */}
+        <div className="mt-12 flex flex-col gap-3 items-center">
+          <div className="bg-surface-card border border-border-subtle px-4 py-2 rounded-full text-xs text-text-secondary flex items-center gap-2">
+            <span className="w-2 h-2 bg-semantic-success rounded-full animate-pulse" />
+            Disciplinas com requisitos numéricos atualizadas
+          </div>
+          <a
+            href="https://github.com/Augusto-Ildefonso/roadusp"
+            className="text-text-muted hover:text-text-primary text-sm transition-colors"
+          >
+            Contribuir no GitHub →
+          </a>
+        </div>
+
+        {/* Footer */}
+        <footer className="mt-auto py-8">
+          <p className="text-text-muted font-medium tracking-wide">
+            Developed by <span className="text-text-secondary">Augusto Ildefonso</span>
+          </p>
+        </footer>
+      </div>
+    </div>
+  );
+};
 
 export default HomePage;

@@ -1,53 +1,107 @@
 import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
-import "./Graph.css"
 
-const Graph = ({ data, highlightId }) => {
+const Graph = ({ data, highlightId, onNodeClick, aprovadasIds, cursandoIds }) => {
   const svgRef = useRef();
 
   useEffect(() => {
-    // Verificar se temos dados válidos
-    if (!data || !data.nodes || data.nodes.length === 0) {
-      return;
-    }
+    if (!data || !data.nodes || data.nodes.length === 0) return;
 
     const width = window.innerWidth;
     const height = window.innerHeight;
-    // Criar escala de cores baseada no semestre das disciplinas
-   
-    // Garantir que links existe, mesmo que vazio
     const links = (data.links || []).map(d => ({ ...d }));
     const nodes = data.nodes.map(d => ({ ...d }));
 
     const svg = d3.select(svgRef.current)
-      .attr("width", width)
-      .attr("height", height)
+      .attr("width", "100vw")
+      .attr("height", "100dvh")
       .attr("viewBox", [-width / 2, -height / 2, width, height])
-      .attr("style", "max-width: 100%; height: auto;");
+      .style("position", "fixed")
+      .style("top", 0)
+      .style("left", 0)
+      .style("touch-action", "none");
 
-    svg.selectAll("*").remove(); // Clear previous renders
+    svg.selectAll("*").remove();
 
-    // Definir marcadores de seta
     const defs = svg.append("defs");
-    
+
     defs.append("marker")
       .attr("id", "arrowhead")
       .attr("viewBox", "-0 -5 10 10")
-      .attr("refX", 13) // Posição da seta em relação ao final da linha
+      .attr("refX", 16)
       .attr("refY", 0)
       .attr("orient", "auto")
-      .attr("markerWidth", 6)
-      .attr("markerHeight", 6)
-      .attr("xoverflow", "visible")
+      .attr("markerWidth", 5)
+      .attr("markerHeight", 5)
       .append("path")
-      .attr("d", "M 0,-5 L 10,0 L 0,5")
-      .attr("fill", "#999")
-      .style("stroke", "none");
+      .attr("d", "M 0,-4 L 8,0 L 0,4")
+      .attr("fill", "#94a3b8");
 
-    // Criar um grupo para conter todos os elementos que serão afetados pelo zoom
+    defs.append("marker")
+      .attr("id", "arrowhead-highlight")
+      .attr("viewBox", "-0 -5 10 10")
+      .attr("refX", 16)
+      .attr("refY", 0)
+      .attr("orient", "auto")
+      .attr("markerWidth", 5)
+      .attr("markerHeight", 5)
+      .append("path")
+      .attr("d", "M 0,-4 L 8,0 L 0,4")
+      .attr("fill", "#1094ab");
+
+    defs.append("filter")
+      .attr("id", "node-glow")
+      .attr("x", "-50%")
+      .attr("y", "-50%")
+      .attr("width", "200%")
+      .attr("height", "200%")
+      .each(function() {
+        d3.select(this).append("feGaussianBlur")
+          .attr("stdDeviation", "3")
+          .attr("result", "blur");
+        d3.select(this).append("feMerge")
+          .selectAll("feMergeNode")
+          .data(["blur", "SourceGraphic"])
+          .join("feMergeNode")
+          .attr("in", d => d);
+      });
+
+    defs.append("filter")
+      .attr("id", "highlight-glow")
+      .attr("x", "-50%")
+      .attr("y", "-50%")
+      .attr("width", "200%")
+      .attr("height", "200%")
+      .each(function() {
+        d3.select(this).append("feGaussianBlur")
+          .attr("stdDeviation", "5")
+          .attr("result", "blur");
+        d3.select(this).append("feMerge")
+          .selectAll("feMergeNode")
+          .data(["blur", "blur", "SourceGraphic"])
+          .join("feMergeNode")
+          .attr("in", d => d);
+      });
+
+    defs.append("filter")
+      .attr("id", "cursando-glow")
+      .attr("x", "-50%")
+      .attr("y", "-50%")
+      .attr("width", "200%")
+      .attr("height", "200%")
+      .each(function() {
+        d3.select(this).append("feGaussianBlur")
+          .attr("stdDeviation", "4")
+          .attr("result", "blur");
+        d3.select(this).append("feMerge")
+          .selectAll("feMergeNode")
+          .data(["blur", "SourceGraphic"])
+          .join("feMergeNode")
+          .attr("in", d => d);
+      });
+
     const container = svg.append("g");
 
-    // Configurar zoom
     const zoom = d3.zoom()
       .scaleExtent([0.1, 4])
       .on("zoom", (event) => {
@@ -56,176 +110,169 @@ const Graph = ({ data, highlightId }) => {
 
     svg.call(zoom);
 
-    // Criar a simulação - só adicionar força de link se existirem links
     const simulation = d3.forceSimulation(nodes)
       .force("charge", d3.forceManyBody().strength(-500))
       .force("center", d3.forceCenter(0, 0))
       .force("x", d3.forceX().strength(0.1))
       .force("y", d3.forceY().strength(0.1));
 
-    // Só adicionar força de link se existirem links
     if (links.length > 0) {
       simulation.force("link", d3.forceLink(links).id(d => d.id).distance(100));
     }
 
-    // Criar links (só se existirem) - agora dentro do container
     const link = container.append("g")
-      .attr("stroke", "#999")
-      .attr("stroke-opacity", 0.6)
       .selectAll("line")
       .data(links)
       .join("line")
-      .attr("stroke-width", d => Math.sqrt(d.value || 1))
-      .attr("marker-end", "url(#arrowhead)"); // Adicionar seta no final da linha
+      .attr("stroke", d => {
+        if (highlightId) {
+          const isConnected = d.source.id === highlightId || d.target.id === highlightId;
+          return isConnected ? "#1094ab" : "#94a3b8";
+        }
+        return "#94a3b8";
+      })
+      .attr("stroke-opacity", d => {
+        if (highlightId) {
+          const isConnected = d.source.id === highlightId || d.target.id === highlightId;
+          return isConnected ? 0.9 : 0.5;
+        }
+        return 0.7;
+      })
+      .attr("stroke-width", d => {
+        if (highlightId) {
+          const isConnected = d.source.id === highlightId || d.target.id === highlightId;
+          return isConnected ? 3 : 1.5;
+        }
+        return 1.5 + Math.sqrt(d.value || 1) * 0.5;
+      })
+      .attr("marker-end", d => {
+        if (highlightId) {
+          const isConnected = d.source.id === highlightId || d.target.id === highlightId;
+          return isConnected ? "url(#arrowhead-highlight)" : "url(#arrowhead)";
+        }
+        return "url(#arrowhead)";
+      });
 
-    // Criar nós - agora dentro do container
-    // Escala de cores por semestre (domain criado a partir dos nós)
-    const semesters = Array.from(new Set(nodes.map(n => n.semestre))).sort((a, b) => (a || '').toString().localeCompare((b || '').toString(), undefined, { numeric: true }));
-    const palette = d3.schemeTableau10;
-    const color = d3.scaleOrdinal().domain(semesters).range(palette);
+    const semesters = Array.from(new Set(nodes.map(n => n.semestre)))
+      .sort((a, b) => (a || '').toString().localeCompare((b || '').toString(), undefined, { numeric: true }));
+
+    const redScale = [
+      "#dc2626", "#ef4444", "#f87171", "#fb7185",
+      "#f43f5e", "#e11d48", "#fca5a5", "#fda4af",
+      "#fecaca", "#ffe4e6",
+    ];
+    const BRIGHT_IDX = 1;
+
+    let nextIdx = -1;
+    if (cursandoIds && cursandoIds.size > 0) {
+      const cursandoSems = nodes
+        .filter((n) => cursandoIds.has(n.id))
+        .map((n) => Number(n.semestre))
+        .filter((s) => !isNaN(s));
+      if (cursandoSems.length > 0) {
+        const maxSem = Math.max(...cursandoSems);
+        nextIdx = semesters.findIndex((s) => Number(s) === maxSem + 1);
+      }
+    }
+
+    const semesterPalette = semesters.map((_, i) => {
+      if (nextIdx < 0) return redScale[Math.min(i, redScale.length - 1)];
+      return redScale[Math.max(0, Math.min(redScale.length - 1, BRIGHT_IDX + (i - nextIdx)))];
+    });
+    const color = d3.scaleOrdinal().domain(semesters).range(semesterPalette);
+
+    function getNodeStatus(d) {
+      if (cursandoIds?.has(d.id)) return "cursando";
+      if (aprovadasIds?.has(d.id)) return "aprovada";
+      return null;
+    }
 
     const node = container.append("g")
       .selectAll("circle")
       .data(nodes)
       .join("circle")
-      .attr("r", d => (highlightId && d.id === highlightId) ? 16 : 10)
-      .attr("fill", d => (highlightId && d.id === highlightId) ? "#ff00a8" : color(d.semestre))
-      .attr("stroke", d => (highlightId && d.id === highlightId) ? "#ffffff" : "none")
-      .attr("stroke-width", d => (highlightId && d.id === highlightId) ? 4 : 0)
+      .attr("r", d => {
+        if (highlightId && d.id === highlightId) return 16;
+        const status = getNodeStatus(d);
+        if (status === "cursando") return 12;
+        if (status === "aprovada") return 7;
+        return 9;
+      })
+      .attr("fill", d => {
+        if (highlightId && d.id === highlightId) return "#1094ab";
+        const status = getNodeStatus(d);
+        if (status === "cursando") return "#eab308";
+        if (status === "aprovada") return "#22c55e";
+        return color(d.semestre);
+      })
+      .attr("stroke", d => {
+        if (highlightId && d.id === highlightId) return "#f1f5f9";
+        const status = getNodeStatus(d);
+        if (status === "cursando") return "#eab308";
+        return color(d.semestre);
+      })
+      .attr("stroke-width", d => {
+        if (highlightId && d.id === highlightId) return 3;
+        if (cursandoIds?.has(d.id)) return 2;
+        return 0;
+      })
+      .attr("opacity", 1)
+      .attr("filter", d => {
+        if (highlightId && d.id === highlightId) return "url(#highlight-glow)";
+        if (cursandoIds?.has(d.id)) return "url(#cursando-glow)";
+        return "url(#node-glow)";
+      })
+      .style("cursor", "pointer")
       .call(d3.drag()
         .on("start", dragstarted)
         .on("drag", dragged)
-        .on("end", dragended))
-      .style("cursor", "pointer");
+        .on("end", dragended));
 
-    // Adicionar tooltip com o ID da disciplina
     node.append("title")
       .text(d => `Código: ${d.id}\nNome: ${d.nome}\nCrédito Aula: ${d.credito_aula}\nCrédito Trabalho: ${d.credito_trabalho || "0"}\nCarga Horária: ${d.carga_horaria || "0"}\nCarga Horária de Estágio: ${d.carga_horaria_estagio || "0"}\nCarga horária de Práticas como Componentes Curriculares: ${d.carga_horaria_pratica || "0"}\nAtividades Teórico-Práticas de Aprofundamento: ${d.atividades_teoricos || "0"}`);
 
-    // Adicionar evento de clique aos nós
     node.on("click", function(event, d) {
-      // Prevenir propagação do evento
       event.stopPropagation();
-      
-      // Remover modal existente se houver
-      d3.select("#disciplina-modal").remove();
-      
-      // Criar modal
-      const modal = d3.select("body")
-        .append("div")
-        .attr("id", "disciplina-modal")
-        .style("position", "fixed")
-        .style("top", "0")
-        .style("left", "0")
-        .style("width", "100%")
-        .style("height", "100%")
-        .style("background", "rgba(0, 0, 0, 0.5)")
-        .style("color", "white")
-        .style("display", "flex")
-        .style("justify-content", "center")
-        .style("align-items", "center")
-        .style("z-index", "1000");
-      
-      // Conteúdo da modal
-      const modalContent = modal.append("div")
-        .style("background", "#2d2d2d")
-        .style("padding", "20px")
-        .style("border-radius", "8px")
-        .style("max-width", "90%")
-        .style("max-height", "80%")
-        .style("overflow-y", "auto")
-        .style("box-shadow", "0 4px 6px rgba(0, 0, 0, 0.1)");
-      
-      // Título
-      modalContent.append("h3")
-        .style("margin-top", "0")
-        .style("color", "#white")
-        .text(d.nome);
-      
-      // Informações
-      const info = [
-        { label: "Código", value: d.id },
-        { label: "Nome", value: d.nome },
-        { label: "Crédito Aula", value: d.credito_aula },
-        { label: "Crédito Trabalho", value: d.credito_trabalho || "0" },
-        { label: "Carga Horária", value: d.carga_horaria || "0" },
-        { label: "Carga Horária de Estágio", value: d.carga_horaria_estagio || "0" },
-        { label: "Carga Horária de Práticas", value: d.carga_horaria_pratica || "0" },
-        { label: "Atividades Teórico-Práticas", value: d.atividades_teoricos || "0" }
-      ];
-      
-      info.forEach(item => {
-        const row = modalContent.append("div")
-          .style("margin-bottom", "8px");
-        
-        row.append("strong")
-          .text(item.label + ": ");
-        
-        row.append("span")
-          .text(item.value);
-      });
-      
-      // Botão fechar
-      modalContent.append("button")
-        .style("margin-top", "15px")
-        .style("padding", "8px 16px")
-        .style("background", "#1094ab")
-        .style("color", "white")
-        .style("border", "none")
-        .style("border-radius", "4px")
-        .style("cursor", "pointer")
-        .text("Fechar")
-        .on("click", () => modal.remove());
-      
-      // Fechar ao clicar fora
-      modal.on("click", function(event) {
-        if (event.target === this) {
-          modal.remove();
-        }
-      });
+      if (onNodeClick) onNodeClick(d);
     });
 
-  // Fechar modal com ESC
-  d3.select("body").on("keydown", function(event) {
-    if (event.key === "Escape") {
-      d3.select("#disciplina-modal").remove();
-    }
-  });
-
-    // Adicionar texto com o código da disciplina embaixo do nó - agora dentro do container
     const text = container.append("g")
       .selectAll("text")
       .data(nodes)
       .join("text")
       .text(d => d.id)
-      .attr("font-size", "12px")
+      .attr("font-size", d => (highlightId && d.id === highlightId) ? "13px" : "11px")
       .attr("text-anchor", "middle")
       .attr("dy", "0.35em")
-      .attr("fill", "white")
-      .attr("font-weight", "bold")
+      .attr("fill", d => {
+        if (highlightId && d.id === highlightId) return "#f1f5f9";
+        const status = getNodeStatus(d);
+        if (status === "cursando") return "#eab308";
+        if (status === "aprovada") return "#22c55e";
+        return "#94a3b8";
+      })
+      .attr("font-weight", d => {
+        if (highlightId && d.id === highlightId) return "bold";
+        if (cursandoIds?.has(d.id)) return "bold";
+        return "normal";
+      })
+      .attr("opacity", 1)
       .style("pointer-events", "none");
 
-    // Função para calcular posição da linha considerando o raio do nó
     function linkArc(d) {
       const dx = d.target.x - d.source.x;
       const dy = d.target.y - d.source.y;
       const dr = Math.sqrt(dx * dx + dy * dy);
-      
-      // Calcular pontos na borda dos círculos
-      const sourceRadius = 10;
-      const targetRadius = 10;
-      
+      const sourceRadius = 9;
+      const targetRadius = 9;
       const sourceX = d.source.x + (dx * sourceRadius) / dr;
       const sourceY = d.source.y + (dy * sourceRadius) / dr;
       const targetX = d.target.x - (dx * targetRadius) / dr;
       const targetY = d.target.y - (dy * targetRadius) / dr;
-      
       return { sourceX, sourceY, targetX, targetY };
     }
 
-    // Função de tick da simulação
     simulation.on("tick", () => {
-      // Atualizar posição dos links (só se existirem)
       if (links.length > 0) {
         link.each(function(d) {
           const positions = linkArc(d);
@@ -237,15 +284,8 @@ const Graph = ({ data, highlightId }) => {
         });
       }
 
-      // Atualizar posição dos nós
-      node
-        .attr("cx", d => d.x)
-        .attr("cy", d => d.y);
-
-      // Atualizar posição do texto (embaixo do nó)
-      text
-        .attr("x", d => d.x)
-        .attr("y", d => d.y + 35); // 35px abaixo do centro do nó (raio 25 + 10px de espaço)
+      node.attr("cx", d => d.x).attr("cy", d => d.y);
+      text.attr("x", d => d.x).attr("y", d => d.y + 28);
     });
 
     function dragstarted(event) {
@@ -266,9 +306,9 @@ const Graph = ({ data, highlightId }) => {
     }
 
     return () => {
-      simulation.stop(); // Cleanup on unmount
+      simulation.stop();
     };
-  }, [data, highlightId]);
+  }, [data, highlightId, onNodeClick, aprovadasIds, cursandoIds]);
 
   return <svg ref={svgRef}></svg>;
 };
