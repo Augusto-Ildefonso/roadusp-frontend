@@ -104,6 +104,14 @@ const Graph = ({ data, highlightId, onNodeClick, aprovadasIds, cursandoIds }) =>
 
     const zoom = d3.zoom()
       .scaleExtent([0.1, 4])
+      .filter(event => {
+        if (event.type.startsWith("touch")) {
+          const target = d3.select(event.target);
+          const tag = target.node().tagName;
+          return tag !== "circle" && tag !== "text";
+        }
+        return !event.button || event.button === 0;
+      })
       .on("zoom", (event) => {
         container.attr("transform", event.transform);
       });
@@ -231,7 +239,10 @@ const Graph = ({ data, highlightId, onNodeClick, aprovadasIds, cursandoIds }) =>
     node.append("title")
       .text(d => `Código: ${d.id}\nNome: ${d.nome}\nCrédito Aula: ${d.credito_aula}\nCrédito Trabalho: ${d.credito_trabalho || "0"}\nCarga Horária: ${d.carga_horaria || "0"}\nCarga Horária de Estágio: ${d.carga_horaria_estagio || "0"}\nCarga horária de Práticas como Componentes Curriculares: ${d.carga_horaria_pratica || "0"}\nAtividades Teórico-Práticas de Aprofundamento: ${d.atividades_teoricos || "0"}`);
 
+    let dragOccurred = false;
+
     node.on("click", function(event, d) {
+      if (dragOccurred) return;
       event.stopPropagation();
       if (onNodeClick) onNodeClick(d);
     });
@@ -289,12 +300,14 @@ const Graph = ({ data, highlightId, onNodeClick, aprovadasIds, cursandoIds }) =>
     });
 
     function dragstarted(event) {
+      dragOccurred = false;
       if (!event.active) simulation.alphaTarget(0.3).restart();
       event.subject.fx = event.subject.x;
       event.subject.fy = event.subject.y;
     }
 
     function dragged(event) {
+      dragOccurred = true;
       event.subject.fx = event.x;
       event.subject.fy = event.y;
     }
