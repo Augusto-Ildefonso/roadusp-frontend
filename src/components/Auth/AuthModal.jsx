@@ -91,9 +91,7 @@ const AuthModal = ({ onClose }) => {
         className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
         onClick={(e) => e.target === overlayRef.current && onClose()}
       >
-        <div className="relative w-[90%] max-w-md animate-in fade-in zoom-in-95 duration-200">
-          <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-primary-DEFAULT to-secondary-DEFAULT opacity-40 blur-sm" />
-          <div className="relative bg-surface-modal backdrop-blur-xl border border-border-subtle rounded-2xl p-6 shadow-2xl">
+        <div className="w-[90%] max-w-md bg-surface-modal backdrop-blur-xl border border-border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-text-primary text-lg font-bold">Redefinir Senha</h2>
               <button
@@ -169,7 +167,6 @@ const AuthModal = ({ onClose }) => {
                 </div>
               </form>
             )}
-          </div>
         </div>
       </div>
     );
@@ -180,9 +177,7 @@ const AuthModal = ({ onClose }) => {
       ref={overlayRef}
       className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
     >
-      <div className="relative w-[90%] max-w-md animate-in fade-in zoom-in-95 duration-200">
-        <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-primary-DEFAULT to-secondary-DEFAULT opacity-40 blur-sm" />
-        <div className="relative bg-surface-modal backdrop-blur-xl border border-border-subtle rounded-2xl p-6 shadow-2xl">
+      <div className="w-[90%] max-w-md bg-surface-modal backdrop-blur-xl border border-border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
           <div className="flex items-center mb-6">
             <h2 className="text-text-primary text-xl font-bold">
               <span className="text-primary-DEFAULT">Road</span>
@@ -337,7 +332,6 @@ const AuthModal = ({ onClose }) => {
           >
             Depois
           </button>
-        </div>
       </div>
     </div>
   );
