@@ -186,7 +186,7 @@ const AuthModal = ({ onClose }) => {
           </div>
 
           <p className="text-text-secondary text-sm mb-6 leading-relaxed">
-            Novidade! Faça login para acompanhar seu histórico acadêmico e visualizar as disciplinas já cursadas no grafo.
+            Novidade! Faça login para acompanhar seu histórico acadêmico e visualizar as disciplinas já cursadas e que está cursando.
           </p>
 
           <div className="flex mb-6 bg-surface-elevated/50 rounded-xl p-1">
