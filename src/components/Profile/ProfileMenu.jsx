@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 
-const ProfileMenu = ({ onChangePasswordClick, onUpload, onLoginClick }) => {
+const ProfileMenu = ({ onChangePasswordClick, onDeleteAccountClick, onUpload, onLoginClick }) => {
   const { user, isLoggedIn, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
@@ -79,6 +79,17 @@ const ProfileMenu = ({ onChangePasswordClick, onUpload, onLoginClick }) => {
                     <path d="M5 7V4a3 3 0 016 0v3" />
                   </svg>
                   Alterar Senha
+                </button>
+
+                <button
+                  onClick={() => { onDeleteAccountClick(); setIsOpen(false); }}
+                  className="w-full px-4 py-2.5 text-left text-semantic-error hover:text-semantic-error/80 hover:bg-semantic-error/5 text-sm transition-colors flex items-center gap-3 cursor-pointer"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M2 4h12M5 4V2a1 1 0 011-1h4a1 1 0 011 1v2M13 4v10a1 1 0 01-1 1H4a1 1 0 01-1-1V4" />
+                    <path d="M6 7v5M10 7v5" />
+                  </svg>
+                  Deletar Conta
                 </button>
 
                 <div className="border-t border-border-subtle my-1" />

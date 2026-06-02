@@ -61,6 +61,11 @@ export function AuthProvider({ children }) {
     await api.put('/api/v1/conta/alterar', { email, senha_antiga: senhaAntiga, nova_senha: novaSenha });
   }, []);
 
+  const deleteAccount = useCallback(async (email) => {
+    await api.delete('/api/v1/conta/deletar', { data: { email } });
+    logout();
+  }, [logout]);
+
   const requestPasswordReset = useCallback(async (email) => {
     await api.post('/api/v1/conta/esqueci-senha', { email });
   }, []);
@@ -115,6 +120,7 @@ export function AuthProvider({ children }) {
         register,
         logout,
         changePassword,
+        deleteAccount,
         requestPasswordReset,
         resetPassword,
         uploadHistory,

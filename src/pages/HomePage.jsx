@@ -5,6 +5,7 @@ import NodeBackground from "../components/NodeBackground/NodeBackground";
 import { useAuth } from "../contexts/AuthContext";
 import AuthModal from "../components/Auth/AuthModal";
 import ChangePasswordModal from "../components/Auth/ChangePasswordModal";
+import DeleteAccountModal from "../components/Auth/DeleteAccountModal";
 import ProfileMenu from "../components/Profile/ProfileMenu";
 import UploadToast from "../components/Upload/UploadToast";
 
@@ -110,6 +111,9 @@ const HomePage = () => {
     return true;
   });
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [deletedAccount, setDeletedAccount] = useState(false);
+  const [navigating, setNavigating] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("idle");
   const [uploadError, setUploadError] = useState("");
 
@@ -223,6 +227,7 @@ const HomePage = () => {
         } else if (curso === ""){
             alert("Selecione um curso")
         } else{
+            setNavigating(true);
             try {
                 const response = await api.get(`/api/v1/cursos/disciplinas?unidade=${unidade}&curso=${curso}`);
                 navigate(`/graph?unidade=${encodeURIComponent(unidade)}&curso=${encodeURIComponent(curso)}`, {
@@ -231,6 +236,7 @@ const HomePage = () => {
             } catch (error) {
                 console.error("Erro ao carregar disciplinas:", error);
                 alert("Erro ao carregar dados do curso. Tente novamente.");
+                setNavigating(false);
             }
         }
     }
@@ -242,6 +248,7 @@ const HomePage = () => {
       <div className="fixed top-4 right-4 z-50">
         <ProfileMenu
           onChangePasswordClick={() => setShowChangePassword(true)}
+          onDeleteAccountClick={() => setShowDeleteAccount(true)}
           onUpload={handleUpload}
           onLoginClick={() => setShowAuthModal(true)}
         />
@@ -253,15 +260,49 @@ const HomePage = () => {
         <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
       )}
 
+      {showDeleteAccount && (
+        <DeleteAccountModal
+          onClose={() => setShowDeleteAccount(false)}
+          onDeleted={() => {
+            setShowDeleteAccount(false);
+            setDeletedAccount(true);
+            setTimeout(() => setDeletedAccount(false), 5000);
+          }}
+        />
+      )}
+
       <UploadToast
         status={uploadStatus}
         message={uploadError}
         onDismiss={handleUploadDismiss}
       />
 
+      {deletedAccount && (
+        <div className="fixed bottom-6 right-6 z-[1000] animate-in fade-in slide-in-from-right-4">
+          <div className="bg-surface-card backdrop-blur-xl border border-border-subtle rounded-xl px-5 py-4 shadow-2xl min-w-[220px]">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded-full bg-semantic-success/20 flex items-center justify-center">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#22c55e" strokeWidth="2.5">
+                  <path d="M3 7l3 3 5-5" />
+                </svg>
+              </div>
+              <span className="text-text-primary text-sm font-medium">Usuário deletado com sucesso</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="relative z-10 flex flex-col items-center w-full">
         {/* Loading Overlay */}
         {isLoadingCursos && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-surface-base/60 backdrop-blur-sm">
+            <div className="bg-surface-card p-8 rounded-3xl shadow-2xl border border-border-subtle">
+              <LoadingSpinner />
+            </div>
+          </div>
+        )}
+
+        {navigating && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-surface-base/60 backdrop-blur-sm">
             <div className="bg-surface-card p-8 rounded-3xl shadow-2xl border border-border-subtle">
               <LoadingSpinner />
@@ -366,7 +407,7 @@ const HomePage = () => {
 
             <button
               onClick={handleClick}
-              className="group relative w-full overflow-hidden bg-gradient-to-r from-primary-DEFAULT to-primary-700 hover:from-accent-teal hover:to-primary-DEFAULT text-white font-bold py-4 rounded-xl shadow-lg shadow-primary-DEFAULT/20 transform transition hover:scale-[1.02] active:scale-95 text-lg"
+              className="group relative w-full overflow-hidden bg-gradient-to-r from-primary-DEFAULT to-primary-700 hover:from-accent-teal hover:to-primary-DEFAULT text-white font-bold py-4 rounded-xl shadow-lg shadow-primary-DEFAULT/20 transform transition hover:scale-[1.02] active:scale-95 text-lg cursor-pointer"
             >
               <span className="relative z-10">Explorar Grade Curricular</span>
               <div className="absolute inset-0 -translate-x-full group-hover:translate-x-0 transition-transform duration-500 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12" />
