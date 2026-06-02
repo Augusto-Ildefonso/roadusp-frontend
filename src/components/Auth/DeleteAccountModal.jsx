@@ -32,10 +32,10 @@ const DeleteAccountModal = ({ onClose, onDeleted }) => {
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 animate-in fade-in duration-200 px-4"
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 animate-in fade-in duration-200"
       onClick={(e) => e.target === overlayRef.current && onClose()}
     >
-      <div className="w-full max-w-md bg-surface-card border border-border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+      <div className="w-[90%] max-w-md bg-surface-modal backdrop-blur-xl border border-border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         <h2 className="text-text-primary text-lg font-bold mb-4">Deletar Conta</h2>
 
         <p className="text-text-secondary text-sm leading-relaxed mb-6">
