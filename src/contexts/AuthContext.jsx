@@ -58,7 +58,15 @@ export function AuthProvider({ children }) {
   }, []);
 
   const changePassword = useCallback(async (email, senhaAntiga, novaSenha) => {
-    await api.patch('/api/v1/conta/alterar', { email, senha_antiga: senhaAntiga, nova_senha: novaSenha });
+    await api.put('/api/v1/conta/alterar', { email, senha_antiga: senhaAntiga, nova_senha: novaSenha });
+  }, []);
+
+  const requestPasswordReset = useCallback(async (email) => {
+    await api.post('/api/v1/conta/esqueci-senha', { email });
+  }, []);
+
+  const resetPassword = useCallback(async (token, novaSenha) => {
+    await api.post('/api/v1/conta/redefinir-senha', { token, nova_senha: novaSenha });
   }, []);
 
   const uploadHistory = useCallback(async (file) => {
@@ -107,6 +115,8 @@ export function AuthProvider({ children }) {
         register,
         logout,
         changePassword,
+        requestPasswordReset,
+        resetPassword,
         uploadHistory,
         pollProcessing,
         setHistoricoStatus,
