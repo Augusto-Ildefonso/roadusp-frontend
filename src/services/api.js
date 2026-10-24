@@ -3,7 +3,7 @@ import axios from 'axios';
 const TOKEN_KEY = 'roadusp_token';
 
 const api = axios.create({
-  baseURL: 'https://roadusp-backend.onrender.com',
+  baseURL: 'https://d26rz0gp3iaite.cloudfront.net',
 });
 
 api.interceptors.request.use((config) => {
